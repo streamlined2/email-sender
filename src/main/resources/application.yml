@@ -1,0 +1,37 @@
+spring:
+ application:
+  name: email-sender
+
+ mail:
+  properties:
+    mail:
+      debug: true
+      transport:
+        protocol: smtp
+      smtp:
+        auth: true
+        starttls:
+          enable: true
+
+ kafka:
+  bootstrap-servers: 127.0.0.1:9092
+  number-of-partitions: 1
+  replication-factor: 1
+    
+server:
+  servlet:
+    context-path: /library
+  port: 8090
+  error:
+    whitelabel:
+      enabled: false
+    include-stacktrace: never
+    include-message: never
+
+logging:
+  level:
+    org:
+      springframework:
+        security: TRACE
+        web:
+          FilterChainProxy: TRACE
