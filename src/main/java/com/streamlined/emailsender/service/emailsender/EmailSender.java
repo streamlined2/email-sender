@@ -6,26 +6,25 @@ import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
 
-import com.streamlined.emailsender.kafka.Contact;
-import com.streamlined.emailsender.kafka.Message;
+import com.streamlined.emailsender.dto.ContactDto;
+import com.streamlined.emailsender.dto.MessageDto;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class EmailSender implements Sender {
 
 	private final MailSender mailSender;
 
-	private EmailSender(MailSender mailSender) {
-		this.mailSender = mailSender;
-	}
-
 	@Override
-	public void send(Message message) {
+	public void send(MessageDto message) {
 		SimpleMailMessage mailMessage = new SimpleMailMessage();
-		mailMessage.setFrom(message.getSender().getName());
-		mailMessage.setReplyTo(message.getSender().getEmail());
-		mailMessage.setSubject(message.getSubject());
-		mailMessage.setText(message.getContent());
-		mailMessage.setTo(message.getRecipients().stream().map(Contact::getEmail).collect(Collectors.joining(",")));
+		mailMessage.setFrom(message.sender().name());
+		mailMessage.setReplyTo(message.sender().email());
+		mailMessage.setSubject(message.subject());
+		mailMessage.setText(message.content());
+		mailMessage.setTo(message.recipients().stream().map(ContactDto::email).collect(Collectors.joining(",")));
 		mailSender.send(mailMessage);
 	}
 

@@ -1,9 +1,9 @@
 package com.streamlined.emailsender.service.emailsender;
 
-import com.streamlined.emailsender.kafka.Message;
+import com.streamlined.emailsender.dto.MessageDto;
 
 public interface Sender {
 
-	void send(Message event);
+	void send(MessageDto event);
 
 }
