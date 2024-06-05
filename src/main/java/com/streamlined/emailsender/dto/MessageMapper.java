@@ -27,4 +27,12 @@ public class MessageMapper {
 				.lastAttemptInstant(entity.getLastAttemptInstant()).errorMessage(entity.getErrorMessage()).build();
 	}
 
+	public MessageDto toDto(Message message) {
+		return MessageDto.builder().createdInstant(message.getInstant())
+				.sender(contactMapper.toDto(message.getSender()))
+				.recipients(contactMapper.toDtoFromContactList(message.getRecipients())).subject(message.getSubject())
+				.content(message.getContent()).status(MessageStatus.FAIL).attempt(0).lastAttemptInstant(null)
+				.errorMessage(null).build();
+	}
+
 }

@@ -2,6 +2,8 @@ package com.streamlined.emailsender.service.messagestore;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
@@ -24,9 +26,9 @@ public class DefaultMessageStoreService implements MessageStoreService {
 	private final MessageMapper messageMapper;
 
 	@Override
-	public String save(MessageDto message) {
+	public MessageDto save(MessageDto message) {
 		MessageData entity = messageMapper.toEntity(message);
-		return messageRepository.save(entity).getId();
+		return messageMapper.toDto(messageRepository.save(entity));
 	}
 
 	@Override
@@ -38,9 +40,6 @@ public class DefaultMessageStoreService implements MessageStoreService {
 		}
 		MessageData entity = messageData.get();
 		entity.setStatus(MessageStatus.SUCCESS);
-		entity.setAttempt(0);
-		entity.setLastAttemptInstant(null);
-		entity.setErrorMessage(null);
 		messageRepository.save(entity);
 	}
 
@@ -57,6 +56,11 @@ public class DefaultMessageStoreService implements MessageStoreService {
 		entity.setLastAttemptInstant(Instant.now());
 		entity.setErrorMessage(errorMessage);
 		messageRepository.save(entity);
+	}
+
+	@Override
+	public Stream<MessageDto> queryForFailedMessages() {
+		return messageRepository.findByStatusIn(Set.of(MessageStatus.FAIL)).map(messageMapper::toDto);
 	}
 
 }

@@ -17,12 +17,20 @@ public class ContactMapper {
 		return ContactDto.builder().name(entity.getName()).email(entity.getEmail()).build();
 	}
 
+	public ContactDto toDto(Contact contact) {
+		return ContactDto.builder().name(contact.getName()).email(contact.getEmail()).build();
+	}
+
 	public List<ContactData> toEntityList(List<ContactDto> dtos) {
 		return dtos.stream().map(this::toEntity).toList();
 	}
 
 	public List<ContactDto> toDtoList(List<ContactData> entities) {
 		return entities.stream().map(this::toDto).toList();
+	}
+
+	public List<ContactDto> toDtoFromContactList(List<Contact> contacts) {
+		return contacts.stream().map(this::toDto).toList();
 	}
 
 }

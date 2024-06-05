@@ -4,6 +4,10 @@ import com.streamlined.emailsender.dto.MessageDto;
 
 public interface Sender {
 
-	void send(MessageDto event);
+	void enqueue(MessageDto event);
+
+	public void dispatchMessages();
+
+	public void retryMessageDispatch();
 
 }

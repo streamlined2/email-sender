@@ -40,9 +40,7 @@ public class MessageDeserializer implements Deserializer<Message> {
 			return messageBuilder.build();
 		} catch (IOException e) {
 			log.error("impossible to deserialize Kafka message {}", data);
-			return null;
-			// throw new KafkaMessageSerializationException("impossible to deserialize Kafka
-			// message", e);//TODO
+			throw new KafkaMessageSerializationException("impossible to deserialize Kafka message", e);
 		}
 	}
 
