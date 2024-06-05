@@ -4,10 +4,12 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.List;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
+@Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Message implements Serializable {
 

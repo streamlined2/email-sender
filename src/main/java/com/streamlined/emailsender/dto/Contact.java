@@ -1,10 +1,13 @@
 package com.streamlined.emailsender.dto;
 
 import java.io.Serializable;
+
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
+@Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Contact implements Serializable {
 
