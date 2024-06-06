@@ -2,6 +2,10 @@ spring:
  application:
   name: email-sender
 
+ config:
+    import:
+    - optional:file:.env[.properties]
+
  data:
   elasticsearch:
     repositories:
@@ -15,8 +19,6 @@ spring:
   replication-factor: 1
 
  mail:
-  host: smtp.gmail.com
-  port: 587
   properties:
     mail:
       debug: true
