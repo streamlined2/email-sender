@@ -1,7 +1,7 @@
 package com.streamlined.emailsender.service.emailsender;
 
-import java.sql.Date;
-import java.time.LocalDate;
+import java.time.Instant;
+import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.springframework.mail.MailSender;
@@ -32,7 +32,6 @@ public class EmailSender implements Sender {
 	@Override
 	public void enqueue(MessageDto message) {
 		messageQueue.add(message);
-		log.info("Message is queued for dispatch: {}", message);
 	}
 
 	@Scheduled(fixedDelay = MESSAGE_DELIVERY_DELAY)
@@ -49,14 +48,14 @@ public class EmailSender implements Sender {
 			mailMessage.setReplyTo(message.sender().email());
 			mailMessage.setSubject(message.subject());
 			mailMessage.setText(message.content());
-			mailMessage.setSentDate(Date.valueOf(LocalDate.now()));
+			mailMessage.setSentDate(Date.from(Instant.now()));
 			mailMessage.setTo(message.recipients().stream().map(ContactDto::email).toArray(size -> new String[size]));
 			mailSender.send(mailMessage);
 			messageStoreService.updateStatusSuccess(message.id());
-			log.info("Message dispatched: {}", message);
 		} catch (Exception e) {
-			messageStoreService.updateStatusFail(message.id(), e.getMessage());
-			log.error("Message can't be dispatched: {}", message);
+			messageStoreService.updateStatusFail(message.id(),
+					"exception class name: %s, message: %s".formatted(e.getClass().getName(), e.getMessage()));
+			log.error("Message can't be dispatched: {}, exception {}", message, e);
 		}
 	}
 

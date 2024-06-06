@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import com.streamlined.emailsender.dto.Message;
 import com.streamlined.emailsender.dto.MessageDto;
 import com.streamlined.emailsender.dto.MessageMapper;
+import com.streamlined.emailsender.exception.CannotSaveMessageException;
 import com.streamlined.emailsender.service.emailsender.Sender;
 import com.streamlined.emailsender.service.messagestore.MessageStoreService;
 
@@ -24,13 +25,18 @@ public class KafkaConsumer {
 	private final MessageStoreService messageStoreService;
 	private final MessageMapper messageMapper;
 
-	@KafkaListener(topics = "notification", groupId = "consumer-group")
+	@KafkaListener(topics = "${spring.kafka.topic}", groupId = "${spring.kafka.group-id}")
 	public void listen(@Payload Message message, @Header(KafkaHeaders.KEY) Object messageKey,
 			@Header(KafkaHeaders.RECORD_METADATA) Object metaData) {
-		log.info("Received message: {} with key {}, record metadata: {} ", message, messageKey, metaData);
-		MessageDto messageDto = messageMapper.toDto(message);
-		MessageDto savedMessageDto = messageStoreService.save(messageDto);
-		sender.enqueue(savedMessageDto);
+		try {
+			MessageDto messageDto = messageMapper.toDto(message);
+			MessageDto savedMessageDto = messageStoreService.save(messageDto);
+			sender.enqueue(savedMessageDto);
+		} catch (Exception e) {
+			log.error("Cannot save recieved message {}, message key {}, meta data {}, exception {}", message,
+					messageKey, metaData, e);
+			throw new CannotSaveMessageException("Cannot save recieved message", e);
+		}
 	}
 
 }
