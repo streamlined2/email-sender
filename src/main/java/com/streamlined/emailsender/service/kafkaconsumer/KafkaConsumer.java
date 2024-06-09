@@ -25,7 +25,7 @@ public class KafkaConsumer {
 	private final MessageStoreService messageStoreService;
 	private final MessageMapper messageMapper;
 
-	@KafkaListener(topics = "${spring.kafka.topic}", groupId = "${spring.kafka.group-id}")
+	@KafkaListener(topics = "${spring.kafka.topic}", groupId = "${spring.kafka.consumer.group-id}")
 	public void listen(@Payload Message message, @Header(KafkaHeaders.KEY) Object messageKey,
 			@Header(KafkaHeaders.RECORD_METADATA) Object metaData) {
 		try {

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
@@ -22,6 +23,7 @@ public class EmailSenderApplication {
 		SpringApplication.run(EmailSenderApplication.class, args);
 	}
 
+	@Profile("!test")
 	@Bean
 	MailSender mailSender(@Value("${spring.mail.host}") String mailHost,
 			@Value("${spring.mail.port}") int mailPort, @Value("${spring.mail.username}") String userName,

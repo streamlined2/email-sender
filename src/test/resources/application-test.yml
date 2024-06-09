@@ -1,0 +1,11 @@
+spring:
+ mail:
+  password: some-fictional-password
+ kafka:
+  bootstrap-servers: localhost:9094
+  consumer:
+   auto-offset-reset: earliest
+   group-id: consumer-group
+  topic: notification
+  number-of-partitions: 1
+  replication-factor: 1

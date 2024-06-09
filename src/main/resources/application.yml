@@ -14,9 +14,10 @@ spring:
  kafka:
   bootstrap-servers: localhost:9094
   topic: notification
-  group-id: consumer-group
   number-of-partitions: 1
   replication-factor: 1
+  consumer:
+   group-id: consumer-group
 
  mail:
   properties:

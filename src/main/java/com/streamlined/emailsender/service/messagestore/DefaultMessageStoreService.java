@@ -3,10 +3,9 @@ package com.streamlined.emailsender.service.messagestore;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
-
 import org.springframework.stereotype.Service;
 
+import com.streamlined.emailsender.Utilities;
 import com.streamlined.emailsender.dao.MessageRepository;
 import com.streamlined.emailsender.data.MessageData;
 import com.streamlined.emailsender.dto.MessageDto;
@@ -59,8 +58,9 @@ public class DefaultMessageStoreService implements MessageStoreService {
 	}
 
 	@Override
-	public Stream<MessageDto> queryForFailedMessages() {
-		return messageRepository.findByStatusIn(Set.of(MessageStatus.FAIL)).map(messageMapper::toDto);
+	public Iterable<MessageDto> queryForFailedMessages() {
+		return Utilities.stream(messageRepository.findByStatusIn(Set.of(MessageStatus.FAIL))).map(messageMapper::toDto)
+				.toList();
 	}
 
 }

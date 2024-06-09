@@ -13,7 +13,6 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaAdmin;
-
 import com.streamlined.emailsender.dto.Message;
 
 @Configuration
@@ -22,7 +21,7 @@ public class KafkaConfiguration {
 
 	@Value("${spring.kafka.bootstrap-servers}")
 	private String bootstrapServers;
-	@Value("${spring.kafka.group-id}")
+	@Value("${spring.kafka.consumer.group-id}")
 	private String groupId;
 
 	@Bean
@@ -35,6 +34,7 @@ public class KafkaConfiguration {
 		Map<String, Object> properties = Map.ofEntries(
 				Map.entry(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers),
 				Map.entry(ConsumerConfig.GROUP_ID_CONFIG, groupId),
+				Map.entry(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest"),
 				Map.entry(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class),
 				Map.entry(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, MessageDeserializer.class));
 		return new DefaultKafkaConsumerFactory<>(properties);

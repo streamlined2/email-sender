@@ -1,7 +1,5 @@
 package com.streamlined.emailsender.service.messagestore;
 
-import java.util.stream.Stream;
-
 import com.streamlined.emailsender.dto.MessageDto;
 
 public interface MessageStoreService {
@@ -12,6 +10,6 @@ public interface MessageStoreService {
 
 	void updateStatusFail(String messageId, String errorMessage);
 	
-	Stream<MessageDto> queryForFailedMessages();
+	Iterable<MessageDto> queryForFailedMessages();
 
 }

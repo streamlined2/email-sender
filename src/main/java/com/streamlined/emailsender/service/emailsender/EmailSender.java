@@ -1,6 +1,5 @@
 package com.streamlined.emailsender.service.emailsender;
 
-import java.time.Instant;
 import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -21,9 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class EmailSender implements Sender {
-
-	private static final long MESSAGE_DELIVERY_DELAY = 5_000L;
-	private static final long MESSAGE_RETRY_LAPSE = 5 * 60 * 1000L;
 
 	private final MessageStoreService messageStoreService;
 	private final MailSender mailSender;
@@ -48,7 +44,7 @@ public class EmailSender implements Sender {
 			mailMessage.setReplyTo(message.sender().email());
 			mailMessage.setSubject(message.subject());
 			mailMessage.setText(message.content());
-			mailMessage.setSentDate(Date.from(Instant.now()));
+			mailMessage.setSentDate(Date.from(message.createdInstant()));
 			mailMessage.setTo(message.recipients().stream().map(ContactDto::email).toArray(size -> new String[size]));
 			mailSender.send(mailMessage);
 			messageStoreService.updateStatusSuccess(message.id());
@@ -60,7 +56,7 @@ public class EmailSender implements Sender {
 	}
 
 	@Async
-	@Scheduled(fixedRate = MESSAGE_RETRY_LAPSE)
+	@Scheduled(fixedRate = MESSAGE_RETRY_LAPSE, initialDelay = MESSAGE_DELIVERY_DELAY)
 	public void retryMessageDispatch() {
 		messageStoreService.queryForFailedMessages().forEach(this::dispatchMessage);
 	}
