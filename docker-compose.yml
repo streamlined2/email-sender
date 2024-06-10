@@ -3,13 +3,22 @@ networks:
     driver: bridge
 
 services:
+  emailsender:
+   image: emailsender:1.0
+   container_name: emailsender
+   networks:
+     - app-tier
+   depends_on:
+    - elasticsearch
+    - kafka
+
   elasticsearch:
     image: bitnami/elasticsearch:8.13.4
     container_name: elasticsearch
     networks:
       - app-tier
     volumes:
-      - 'd:\elasticsearch:/bitnami/elasticsearch/data'
+      -  'd:\elasticsearch:/bitnami/elasticsearch/data'
     ports:
      - "9400:9200"
 
@@ -38,7 +47,7 @@ services:
     - "9092:9092"
     - "9094:9094"
    volumes:
-    - "kafka_data:/bitnami"
+    - 'd:\kafka:/bitnami'
    environment:
     - KAFKA_CFG_NODE_ID=1001
     - KAFKA_CFG_PROCESS_ROLES=controller,broker
@@ -47,11 +56,3 @@ services:
     - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1001@kafka:9093
     - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
     - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
-
-volumes:
-  elasticsearch_data:
-    driver: local
-  kibana_data:
-    driver: local
-  kafka_data:
-    driver: local
