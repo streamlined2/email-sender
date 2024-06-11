@@ -3,6 +3,7 @@ package com.streamlined.emailsender;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
@@ -164,6 +165,68 @@ class EmailSenderTest {
 			verify(mailSender, never()).send(any(SimpleMailMessage.class));
 			verify(messageStoreService, never()).updateStatusSuccess(messageDto.id());
 			verify(messageStoreService, never()).updateStatusFail(anyString(), anyString());
+		}).exceptionally(exc -> {
+			fail("Sending message to Kafka topic failed");
+			return null;
+		});
+
+	}
+
+	@Test
+	void testMessageStoredButNeverSent() {
+
+		Instant instant = Instant.now();
+		Contact senderContact = Contact.builder().name("Administrator").email("admin@company.com").build();
+		List<Contact> recipientContacts = List.of(Contact.builder().name("John").email("john@company.com").build(),
+				Contact.builder().name("Jack").email("jack@company.com").build(),
+				Contact.builder().name("Robert").email("robert@company.com").build());
+		String subject = "Very important message";
+		String content = "Some troublesome event happened somewhere";
+		Message message = Message.builder().instant(instant).sender(senderContact).recipients(recipientContacts)
+				.subject(subject).content(content).build();
+
+		final String messageId = "1";
+
+		ContactDto senderContactDto = ContactDto.builder().name("Administrator").email("admin@company.com").build();
+		List<ContactDto> recipientContactDtos = List.of(
+				ContactDto.builder().name("John").email("john@company.com").build(),
+				ContactDto.builder().name("Jack").email("jack@company.com").build(),
+				ContactDto.builder().name("Robert").email("robert@company.com").build());
+		MessageDto messageDto = MessageDto.builder().id(messageId).createdInstant(instant).sender(senderContactDto)
+				.recipients(recipientContactDtos).subject(subject).content(content).build();
+
+		ContactData senderContactData = ContactData.builder().name(senderContact.getName())
+				.email(senderContact.getEmail()).build();
+		List<ContactData> recipientContactData = recipientContacts.stream()
+				.map(contact -> ContactData.builder().name(contact.getName()).email(contact.getEmail()).build())
+				.toList();
+		MessageData messageData = MessageData.builder().id(messageId).createdInstant(instant).sender(senderContactData)
+				.recipients(recipientContactData).subject(subject).content(content).status(MessageStatus.FAIL)
+				.attempt(0).lastAttemptInstant(null).errorMessage(null).build();
+
+		SimpleMailMessage mailMessage = new SimpleMailMessage();
+		mailMessage.setFrom(senderContact.getName());
+		mailMessage.setReplyTo(senderContact.getEmail());
+		mailMessage.setSubject(subject);
+		mailMessage.setText(content);
+		mailMessage.setSentDate(Date.from(instant));
+		mailMessage.setTo(recipientContacts.stream().map(Contact::getEmail).toArray(size -> new String[size]));
+
+		when(messageRepository.save(any())).thenReturn(messageData);
+		when(messageRepository.findById(anyString())).thenReturn(Optional.of(messageData));
+		when(messageRepository.findByStatusIn(any())).thenReturn(List.of());
+		doThrow(RuntimeException.class).when(mailSender).send(any(SimpleMailMessage.class));
+
+		CompletableFuture<SendResult<String, Message>> future = kafkaOperations.send(notificationTopic, message);
+		kafkaOperations.flush();
+
+		future.thenAccept(sendResult -> {
+			verify(messageStoreService, timeout(MESSAGE_RECEIVE_DELAY)).save(messageDto);
+			verify(emailSender, timeout(MESSAGE_RECEIVE_DELAY)).enqueue(messageDto);
+
+			verify(mailSender, timeout(MESSAGE_DELIVERY_TIME)).send(mailMessage);
+			verify(messageStoreService, timeout(MESSAGE_DELIVERY_TIME)).updateStatusFail(anyString(), anyString());
+			verify(messageStoreService, never()).updateStatusSuccess(messageDto.id());
 		}).exceptionally(exc -> {
 			fail("Sending message to Kafka topic failed");
 			return null;
