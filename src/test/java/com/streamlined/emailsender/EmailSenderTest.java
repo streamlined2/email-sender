@@ -125,6 +125,49 @@ class EmailSenderTest {
 			fail("Sending message to Kafka topic failed");
 			return null;
 		});
+	}
+
+	@Test
+	void testMessageNeverStoredNorSent() {
+
+		Instant instant = Instant.now();
+		Contact senderContact = Contact.builder().name("Administrator").email("admin@company.com").build();
+		List<Contact> recipientContacts = List.of(Contact.builder().name("John").email("john@company.com").build(),
+				Contact.builder().name("Jack").email("jack@company.com").build(),
+				Contact.builder().name("Robert").email("robert@company.com").build());
+		String subject = "Very important message";
+		String content = "Some troublesome event happened somewhere";
+		Message message = Message.builder().instant(instant).sender(senderContact).recipients(recipientContacts)
+				.subject(subject).content(content).build();
+
+		final String messageId = "1";
+
+		ContactDto senderContactDto = ContactDto.builder().name("Administrator").email("admin@company.com").build();
+		List<ContactDto> recipientContactDtos = List.of(
+				ContactDto.builder().name("John").email("john@company.com").build(),
+				ContactDto.builder().name("Jack").email("jack@company.com").build(),
+				ContactDto.builder().name("Robert").email("robert@company.com").build());
+		MessageDto messageDto = MessageDto.builder().id(messageId).createdInstant(instant).sender(senderContactDto)
+				.recipients(recipientContactDtos).subject(subject).content(content).build();
+
+		when(messageRepository.save(any())).thenThrow(new RuntimeException());
+		when(messageRepository.findById(anyString())).thenReturn(Optional.empty());
+		when(messageRepository.findByStatusIn(any())).thenReturn(List.of());
+
+		CompletableFuture<SendResult<String, Message>> future = kafkaOperations.send(notificationTopic, message);
+		kafkaOperations.flush();
+
+		future.thenAccept(sendResult -> {
+			verify(messageStoreService, timeout(MESSAGE_RECEIVE_DELAY)).save(messageDto);
+			verify(emailSender, never()).enqueue(any());
+
+			verify(mailSender, never()).send(any(SimpleMailMessage.class));
+			verify(messageStoreService, never()).updateStatusSuccess(messageDto.id());
+			verify(messageStoreService, never()).updateStatusFail(anyString(), anyString());
+		}).exceptionally(exc -> {
+			fail("Sending message to Kafka topic failed");
+			return null;
+		});
 
 	}
 
