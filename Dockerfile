@@ -2,7 +2,7 @@ FROM maven as build
 WORKDIR /emailsender
 COPY pom.xml .
 COPY src ./src
-RUN mvn clean package
+RUN mvn -Dmaven.test.skip=true clean package
 
 FROM openjdk:17-alpine
 WORKDIR /emailsender

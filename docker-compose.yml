@@ -8,9 +8,13 @@ services:
    container_name: emailsender
    networks:
      - app-tier
+   environment:
+    - ELASTICSEARCH_URIS=http://elasticsearch:9400
    depends_on:
-    - elasticsearch
-    - kafka
+     elasticsearch:
+      condition: service_started
+     kafka:
+      condition: service_started
 
   elasticsearch:
     image: bitnami/elasticsearch:8.13.4
@@ -56,3 +60,11 @@ services:
     - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1001@kafka:9093
     - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
     - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+
+volumes:
+  elasticsearch_data:
+    driver: local
+  kibana_data:
+    driver: local
+  kafka_data:
+    driver: local

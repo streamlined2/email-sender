@@ -6,6 +6,9 @@ spring:
     import:
     - optional:file:.env[.properties]
 
+ elasticsearch:
+    uris: ${ELASTICSEARCH_URIS}
+
  data:
   elasticsearch:
     repositories:
